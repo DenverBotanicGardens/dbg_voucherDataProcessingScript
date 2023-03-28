@@ -114,72 +114,13 @@ def habitat(row):
         habitat = ''
         if row['plants nearby']:
             habitat += 'Plants nearby: ' + row['plants nearby'] + '. '
-        # if row['microHabitat']:
-        #     habitat += 'Area immediately surrounding specimen: ' + row['microHabitat'] + '. '
-        # if row['land use/disturbance']:
-        #     habitat += 'Land use/disturbance history: ' + row['land use/disturbance'] + '. '
-        # if row['slope']:
-        #     habitat += 'Estimated slope in degrees: ' + row['slope'] + '. '                
-    
-        # # Translate the aspect values to long strings.
-        # aspect_long = '' 
-        # if row['aspect'].upper() == 'N':
-        #     aspect_long = 'north'
-        # elif row['aspect'].upper() == 'E':
-        #     aspect_long = 'east'
-        # elif row['aspect'].upper() == 'S':
-        #     aspect_long = 'south'
-        # elif row['aspect'].upper() == 'W':
-        #     aspect_long = 'west'
-        
-        # elif row['aspect'].upper() == 'NE':
-        #     aspect_long = 'northeast'
-        # elif row['aspect'].upper() == 'NW':
-        #     aspect_long = 'northwest'
-        # elif row['aspect'].upper() == 'SE':
-        #     aspect_long = 'southeast'
-        # elif row['aspect'].upper() == 'SW':
-        #     aspect_long = 'southwest'
-        
-        # elif row['aspect'].upper() == 'ENE':
-        #     aspect_long = 'east northeast'
-        # elif row['aspect'].upper() == 'WNW':
-        #     aspect_long = 'west northwest'
-        # elif row['aspect'].upper() == 'ESE':
-        #     aspect_long = 'east southeast'
-        # elif row['aspect'].upper() == 'WSW':
-        #     aspect_long = 'west southwest'
-        
-        # elif row['aspect'].upper() == 'NNE':
-        #     aspect_long = 'north northeast'
-        # elif row['aspect'].upper() == 'NNW':
-        #     aspect_long = 'north northwest'
-        # elif row['aspect'].upper() == 'SSE':
-        #     aspect_long = 'south southeast'
-        # elif row['aspect'].upper() == 'SSW':
-        #     aspect_long = 'south southwest'
-        # else:
-        #     aspect_long = 'UNRECOGNIZED ASPECT VALUE - POSSIBLE ERROR'
+
 
         # Populate the field 'habitat'    
         habitat = ''
         if row['plants nearby']:
-            habitat += 'Plants nearby: ' + row['plants nearby'] + '. '
-        # if row['microHabitat']:
-        #     habitat += 'Area immediately surrounding specimen: ' + row['microHabitat'] + '. '
-        # if row['land use/disturbance']:
-        #     habitat += 'Land use/disturbance history: ' + row['land use/disturbance'] + '. '
-        # if row['slope']:
-        #     habitat += 'Estimated slope in degrees: ' + row['slope'] + '. '                
-        # if row['aspect']:
-        #     habitat += 'Slope aspect: ' + aspect_long + '. '          
-        # if row['soil']:
-        #     habitat += 'Soil description: ' + row['soil'] + '. '
-        # if row['terrain']:
-        #     habitat += 'Terrain: ' + row['terrain'] + '. '
-        # if row['additional habitat descriptions']:
-        #     habitat += 'Additional habitat descriptions: ' + row['additional habitat descriptions'] + '.'                
-        # row['habitat'] = habitat
+            habitat += 'Plants nearby: ' + row['plants nearby'] + '. '              
+        row['habitat'] = habitat
             
 
 
@@ -194,8 +135,6 @@ def dataGeneralizations(row):
 # Populate new field 'locationRemarks'
 def locationRemarks(row):             
             locationRemarks = ''
-            # if row['Element Occurrence ID']:
-            #     locationRemarks += 'Element Occurrence ID: ' + row['Element Occurrence ID'] + '. '
             if row['Landowner']:
                 locationRemarks += 'Landowner: ' + row['Landowner'] + '.'
             row['locationRemarks'] = locationRemarks            
@@ -204,30 +143,10 @@ def locationRemarks(row):
 # Populate new field 'occurrenceRemarks'
 # Frequency data are being translated to new values.
 def occurrenceRemarks(row):   
-
-            # Translate the Frequency data         
-            # freq = ''
-            # if row['Frequency'] == 'Abundant' or row['Frequency'] == 'abundant':
-            #         freq = 'Abundant (>500)'
-            # elif row['Frequency'] == 'Common' or row['Frequency'] == 'common':
-            #         freq = 'Common (101-500)'                    
-            # elif row['Frequency'] == 'Frequent' or row['Frequency'] == 'frequent':
-            #         freq = 'Frequent (11-100)'                          
-            # elif row['Frequency'] == 'Occassional' or row['Frequency'] == 'occassional':
-            #         freq = 'Occassional (6-10)'                  
-            # elif row['Frequency'] == 'Rare' or row['Frequency'] == 'rare':
-            #         freq = 'Rare (1-5)'  
-
             # Populate field 'occurrenceRemarks'         
             occurrenceRemarks = ''
             if row['Project Title']:
                 occurrenceRemarks += row['Project Title'].title() + '. '
-            # if row['Frequency']:
-            #     occurrenceRemarks += 'Estimated frequency within viewshed: ' + freq + '. '
-            # if row['Tissue Collected'].lower() == 'y'and row['Tissue Relationship'].lower() == 'same individual':
-            #     occurrenceRemarks += 'Tissue sample collected. '
-            # if row['Tissue Collected'].lower() == 'y'and row['Tissue Relationship'].lower() == 'same population':
-            #     occurrenceRemarks += 'Tissue sample collected from another individual in the same population. '
             if row['collector notes']:
                 occurrenceRemarks += row['collector notes'].title() + '. '
             if row['iNaturalist ID']:
@@ -304,30 +223,6 @@ def associatedTaxa(row):
             if associatedTaxa.startswith(','):
                 associatedTaxa = associatedTaxa.lstrip(" ,")
             row['associatedTaxa'] = associatedTaxa
-
-
-# Populate new field 'materialSample-sampleType'
-# def materialSample_sampleType(row):    
-#             materialSample_sampleType = ''
-#             if row['Tissue Collected'].lower() == 'y':
-#                 materialSample_sampleType += 'tissue'
-#             row['materialSample-sampleType'] = materialSample_sampleType
-
-
-# Populate new field 'materialSample-disposition'
-# def materialSample_disposition(row):            
-#             materialSample_disposition = ''
-#             if row['Tissue Collected'].lower() == 'y':
-#                 materialSample_disposition += 'in collection'
-#             row['materialSample-disposition'] = materialSample_disposition
-            
-            
-# Populate new field 'materialSample-preservationType'
-# def materialSample_preservationType(row):
-#     materialSample_preservationType = ''            
-#     if row['Tissue Collected'].lower() == 'y':
-#         materialSample_preservationType += 'dessicated'
-#     row['materialSample-preservationType'] = materialSample_preservationType
 
 # Populate new field otherCatalogNumbers
 def otherCatalogNumbers(row):
