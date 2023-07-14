@@ -26,7 +26,9 @@ is created in the working directory. The temporary file is removed at script com
 
 import csv, os, sys
 import pandas as pd
-
+import requests
+import urllib
+import json
 # Set mode = 1 to enter file names as command line arguments
 # Set mode = 2 to enter file names inside this script
 mode = 2
@@ -68,7 +70,7 @@ def main():
     with open(input_csv, 'r') as infile:
         reader = csv.DictReader(infile)
         # Add a list of new field names to be added to existing fields
-        fieldnames = reader.fieldnames + ['habitat', 'dataGeneralizations', 'locationRemarks', 'occurrenceRemarks', 'description', 'dynamicProperties', 'otherCatalogNumbers']
+        fieldnames = reader.fieldnames + ['habitat', 'dataGeneralizations', 'locationRemarks', 'occurrenceRemarks', 'description', 'dynamicProperties', 'otherCatalogNumbers', 'minimumElevationInMeters_USGS', 'georeferenceRemarks']
         # Open the output file
         with open(outfile, 'w', newline='') as outfile:
             writer = csv.DictWriter(outfile, fieldnames=fieldnames)
@@ -80,6 +82,7 @@ def main():
 
             # Execute a function for each new data field        
             for row in reader:
+                minimumElevationInMeters(row)
                 habitat(row)
                 dataGeneralizations(row)
                 locationRemarks(row)
@@ -111,11 +114,6 @@ def main():
 
 # define new field 'habitat' 
 def habitat(row):         
-        habitat = ''
-        if row['plants nearby']:
-            habitat += 'Plants nearby: ' + row['plants nearby'] + '. '
-
-
         # Populate the field 'habitat'    
         habitat = ''
         if row['plants nearby']:
@@ -230,7 +228,63 @@ def otherCatalogNumbers(row):
     if row['catalogNumber']:
         otherCatalogNumbers += row['catalogNumber'][6:]
     row['otherCatalogNumbers'] = otherCatalogNumbers
-     
+
+#ELEVATION FROM USGS API---------------------------------------------------------------------------------------------
+# USGS Elevation Point Query Service
+# Generates elevation values from coordinates, when supplied.
+url = r'https://epqs.nationalmap.gov/v1/json?'
+
+#create the lat & lon variables
+lon = ''
+lat = ''
+# create an Empty DataFrame object
+df = pd.DataFrame()
+#create empty variable for elevation value result
+elevationResult = ''
+
+#Populate new field 'minimumElevationInMeters'
+def minimumElevationInMeters(row):
+     minimumElevationInMeters = ''
+     #if there are latitude and longitude values, set the variables and then add to the dataframe
+     if row['decimalLongitude'] and row['decimalLatitude']:
+          lon = row['decimalLongitude']
+          lat = row['decimalLatitude']
+          df = pd.DataFrame({
+          'lat': lat,
+          'lon': lon
+          }, index=[0])
+          #run function that calls API
+          elevation_function(df, 'lat', 'lon')
+          georeferenceRemarks(row)
+          #set row value to result rfom API call
+     row['minimumElevationInMeters_USGS'] = elevationResult
+
+#Function to call the USGS API
+def elevation_function(df, lat_column, lon_column):
+    for lat, lon in zip(df[lat_column], df[lon_column]):
+    # define rest query params
+     params = {
+        'output': 'json',
+        'x': lon,
+        'y': lat,
+        'units': 'Meters'
+    }
+    
+    # format query string and return query value
+    result = requests.get((url + urllib.parse.urlencode(params)))
+    #elevations.append(result.json()['USGS_Elevation_Point_Query_Service']['Elevation_Query']['Elevation'])
+    #new 2023:
+    #print(json.dumps((result.json()['value'])))
+    global elevationResult
+    elevationResult = json.dumps((result.json()['value'])).replace('"','')[:-8]
+    # print("value from api" + json.dumps((result.json()['value'])))
+
+# Populate new field 'georeferenceRemarks' with note about elevation source. Executes within minimElevationInMeters function
+def georeferenceRemarks(row):
+    georeferenceRemarks = ''            
+    remark = "Elevation value calculated using USGS Bulk Point Query Service (V 2.0)"
+    row['georeferenceRemarks'] = remark
+
 
 if __name__ == "__main__":
     main()
