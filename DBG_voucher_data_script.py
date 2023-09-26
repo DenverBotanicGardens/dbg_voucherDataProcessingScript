@@ -45,8 +45,8 @@ if mode == 1:
 # Name input and output files here for mode = 2
 #-------------------------------------------------    
 if mode == 2:
-    input_file = 'C:/Users/richard.levy/.ssh/dbg_voucherDataProcessingScript/TEMPLATE_fungariumVoucherData_test.xlsx'
-    output_file = 'C:/Users/richard.levy/.ssh/dbg_voucherDataProcessingScript/testOutput.csv'
+    input_file = 'C:/dbg_voucherDataProcessingScript/TEMPLATE_DataFields_Vouchers_Fungi_gnrTest.xlsx'
+    output_file = 'C:/dbg_voucherDataProcessingScript/testOutput.csv'
 
 def main():
     
@@ -83,6 +83,7 @@ def main():
             # Execute a function for each new data field        
             for row in reader:
                 minimumElevationInMeters(row)
+                scientificName(row)
                 habitat(row)
                 dataGeneralizations(row)
                 locationRemarks(row)
@@ -316,27 +317,31 @@ def scientificName(row):
      #Function to call the GNR API
 def globalNamesResolver_function(df, name_column):
     for name in zip(df[name_column]):
+        newName = ''.join(name)
+        print(newName)
     # define rest query params
-     params = {
-        'nameStrings': name,
-        'dataSaources': 5,
-        "withAllMatches": "true",
-        "withCapitalization": "true",
-        "withSpeciesGroup": "true",
-        "withUninomialFuzzyMatch": "false",
-        "withStats": "true",
-        "mainTaxonThreshold": 0.6
-    }
-     
+        params = {
+            "nameStrings": newName,
+            "dataSources": 5,
+            "withAllMatches": True,
+            "withCapitalization": True,
+            "withSpeciesGroup": True,
+            "withUninomialFuzzyMatch": False,
+            "withStats": True,
+            "mainTaxonThreshold": 0.6
+        }
+    print(params)
     # format query string and return query value
     result = requests.post((resolver_api_url + urllib.parse.urlencode(params)))
     #elevations.append(result.json()['USGS_Elevation_Point_Query_Service']['Elevation_Query']['Elevation'])
     #new 2023:
     #print(json.dumps((result.json()['value'])))
     global nameResult
-    nameResult = json.dumps((result.json()['matchedCanonicalFull']))
-    print("value from api" + json.dumps((result.json()['matchedCanonicalFull'])))
-
+    #nameResult = json.dumps((result.json()['names.results.matchedCanonicalFull']))
+    apiResponseData = result.json()
+    for key in apiResponseData:{
+    print(key,":", apiResponseData[key])
+}
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
