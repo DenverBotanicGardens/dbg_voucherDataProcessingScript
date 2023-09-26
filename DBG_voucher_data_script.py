@@ -45,8 +45,8 @@ if mode == 1:
 # Name input and output files here for mode = 2
 #-------------------------------------------------    
 if mode == 2:
-    input_file = 'C:/DBG_voucherDataProcessingScript/TEMPLATE_fungariumVoucherData.xlsx'
-    output_file = 'C:/DBG_voucherDataProcessingScript/testOutput.csv'
+    input_file = 'C:/Users/richard.levy/.ssh/dbg_voucherDataProcessingScript/TEMPLATE_fungariumVoucherData_test.xlsx'
+    output_file = 'C:/Users/richard.levy/.ssh/dbg_voucherDataProcessingScript/testOutput.csv'
 
 def main():
     
@@ -70,7 +70,7 @@ def main():
     with open(input_csv, 'r') as infile:
         reader = csv.DictReader(infile)
         # Add a list of new field names to be added to existing fields
-        fieldnames = reader.fieldnames + ['habitat', 'dataGeneralizations', 'locationRemarks', 'occurrenceRemarks', 'description', 'dynamicProperties', 'otherCatalogNumbers', 'minimumElevationInMeters_USGS', 'georeferenceRemarks']
+        fieldnames = reader.fieldnames + ['habitat', 'dataGeneralizations', 'locationRemarks', 'occurrenceRemarks', 'description', 'dynamicProperties', 'otherCatalogNumbers', 'minimumElevationInMeters_USGS', 'georeferenceRemarks','nameFromGNR']
         # Open the output file
         with open(outfile, 'w', newline='') as outfile:
             writer = csv.DictWriter(outfile, fieldnames=fieldnames)
@@ -285,6 +285,59 @@ def georeferenceRemarks(row):
     remark = "Elevation value calculated using USGS Bulk Point Query Service (V 2.0)"
     row['georeferenceRemarks'] = remark
 
+
+
+
+#SCIENTIFIC NAME VALIDATION FROM GLOBAL NAMES INDEX API---------------------------------------------------------------------------------------------
+# Global Names Resolver API endpoint
+resolver_api_url = "https://verifier.globalnames.org/api/v1/verifications"
+
+#create the lat & lon variables
+name = ''
+# create an Empty DataFrame object
+df = pd.DataFrame()
+#create empty variable for elevation value result
+nameResult = ''
+
+#Populate new field 'minimumElevationInMeters'
+def scientificName(row):
+     scientificName = ''
+     #if there is a scientificName value, set the variable and then add to the dataframe
+     if row['scientificName']:
+        name = row['scientificName']
+        df = pd.DataFrame({
+        'name': name,
+        }, index=[0])
+        #run function that calls API
+        globalNamesResolver_function(df, 'name')
+        #set row value to result from API call
+     row['nameFromGNR'] = nameResult
+
+     #Function to call the GNR API
+def globalNamesResolver_function(df, name_column):
+    for name in zip(df[name_column]):
+    # define rest query params
+     params = {
+        'nameStrings': name,
+        'dataSaources': 5,
+        "withAllMatches": "true",
+        "withCapitalization": "true",
+        "withSpeciesGroup": "true",
+        "withUninomialFuzzyMatch": "false",
+        "withStats": "true",
+        "mainTaxonThreshold": 0.6
+    }
+     
+    # format query string and return query value
+    result = requests.post((resolver_api_url + urllib.parse.urlencode(params)))
+    #elevations.append(result.json()['USGS_Elevation_Point_Query_Service']['Elevation_Query']['Elevation'])
+    #new 2023:
+    #print(json.dumps((result.json()['value'])))
+    global nameResult
+    nameResult = json.dumps((result.json()['matchedCanonicalFull']))
+    print("value from api" + json.dumps((result.json()['matchedCanonicalFull'])))
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
     main()
