@@ -70,7 +70,7 @@ def main():
     with open(input_csv, 'r') as infile:
         reader = csv.DictReader(infile)
         # Add a list of new field names to be added to existing fields
-        fieldnames = reader.fieldnames + ['habitat', 'dataGeneralizations', 'locationRemarks', 'occurrenceRemarks', 'description', 'dynamicProperties', 'otherCatalogNumbers', 'minimumElevationInMeters_USGS', 'georeferenceRemarks','nameFromGNR']
+        fieldnames = reader.fieldnames + ['habitat', 'dataGeneralizations', 'locationRemarks', 'occurrenceRemarks', 'description', 'dynamicProperties', 'otherCatalogNumbers', 'minimumElevationInMeters_USGS', 'georeferenceRemarks','GNVmatchType','GNVmatchedCanonicalFull','GNVisSynonym','GNVdataSourceTitleShort']
         # Open the output file
         with open(outfile, 'w', newline='') as outfile:
             writer = csv.DictWriter(outfile, fieldnames=fieldnames)
@@ -83,7 +83,7 @@ def main():
             # Execute a function for each new data field        
             for row in reader:
                 minimumElevationInMeters(row)
-                scientificName(row)
+                verifyScientificNames(row)
                 habitat(row)
                 dataGeneralizations(row)
                 locationRemarks(row)
@@ -291,57 +291,46 @@ def georeferenceRemarks(row):
 
 #SCIENTIFIC NAME VALIDATION FROM GLOBAL NAMES INDEX API---------------------------------------------------------------------------------------------
 # Global Names Resolver API endpoint
-resolver_api_url = "https://verifier.globalnames.org/api/v1/verifications"
+verifier_api_url = "https://verifier.globalnames.org/api/v1/verifications"
 
-#create the lat & lon variables
-name = ''
+#create the scientificName variable
+nameStrings = ''
 # create an Empty DataFrame object
 df = pd.DataFrame()
-#create empty variable for elevation value result
-nameResult = ''
+#create empty variable for results
+gnvResult = {}
 
 #Populate new field 'minimumElevationInMeters'
-def scientificName(row):
-     scientificName = ''
-     #if there is a scientificName value, set the variable and then add to the dataframe
-     if row['scientificName']:
-        name = row['scientificName']
-        df = pd.DataFrame({
-        'name': name,
-        }, index=[0])
-        #run function that calls API
-        globalNamesResolver_function(df, 'name')
-        #set row value to result from API call
-     row['nameFromGNR'] = nameResult
+def verifyScientificNames(row):
+     #if there is a scientificName, set as variable and then add to the dataframe
+    if row['scientificName']:
+            nameStrings = row['scientificName']
+            df = pd.DataFrame({
+            'nameStrings': nameStrings
+            }, index=[0])
+            #run function that calls API
+            gnv_function(df, 'nameStrings')
+            #set row value to result rfom API call
+    # row['GNVmatchType'] = gnvResult.matchType
+    # row['GNVmatchedCanonicalFull'] = gnvResult.matchedCanonicalFull
+    # row['GNVisSynonym'] = gnvResult.isSynonym
+    # row['GNVdataSourceTitleShort'] = gnvResult.dataSourceTitleShort
 
-     #Function to call the GNR API
-def globalNamesResolver_function(df, name_column):
-    for name in zip(df[name_column]):
-        newName = ''.join(name)
-        print(newName)
+def gnv_function(df, nameStrings_column):
+    for nameStrings in zip(df[nameStrings_column]):
     # define rest query params
-        params = {
-            "nameStrings": newName,
-            "dataSources": 5,
-            "withAllMatches": True,
-            "withCapitalization": True,
-            "withSpeciesGroup": True,
-            "withUninomialFuzzyMatch": False,
-            "withStats": True,
-            "mainTaxonThreshold": 0.6
-        }
+     params = {
+        'nameStrings': nameStrings,
+        'dataSources': 5,
+        'withAllMatches': True,
+        'withCapitalization': True,
+        'withSpeciesGroup': True,
+        'withUninomialFuzzyMatch': False,
+        'withStats': True,
+        'mainTaxonThreshold': 0.6
+    }
     print(params)
-    # format query string and return query value
-    result = requests.post((resolver_api_url + urllib.parse.urlencode(params)))
-    #elevations.append(result.json()['USGS_Elevation_Point_Query_Service']['Elevation_Query']['Elevation'])
-    #new 2023:
-    #print(json.dumps((result.json()['value'])))
-    global nameResult
-    #nameResult = json.dumps((result.json()['names.results.matchedCanonicalFull']))
-    apiResponseData = result.json()
-    for key in apiResponseData:{
-    print(key,":", apiResponseData[key])
-}
+
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
