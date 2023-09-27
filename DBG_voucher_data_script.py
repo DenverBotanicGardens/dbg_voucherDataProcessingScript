@@ -315,13 +315,19 @@ def gnv_function(nameStrings):
     # define rest query params
     params = {
         "nameStrings": [nameStrings],
-        "dataSources": [5]
+        "dataSources": [5],
+        "withAllMatches": True,
+        "withCapitalization": True,
+        "withSpeciesGroup": True,
+        "withUninomialFuzzyMatch":False,
+        "withStats": True,
+        "mainTaxonThreshold": 0.6
     }
     print(params)
     gnvResponse = requests.post(verifier_api_url, json=params)
     # print(gnvResponse.json())
     gnvResponseJSON = json.loads(gnvResponse.text)
-    print(gnvResponseJSON["metadata"])
+    print(gnvResponseJSON["names"][0]["matchType"])
 
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
