@@ -293,10 +293,11 @@ def georeferenceRemarks(row):
 # Global Names Resolver API endpoint
 verifier_api_url = "https://verifier.globalnames.org/api/v1/verifications"
 
-#create the scientificName variable
-nameStrings = ''
-# create an Empty DataFrame object
-df = pd.DataFrame()
+#Create variables for each value that needs to be added to the data sheet
+matchType = ''
+matchedCanonicalFull = ''
+isSynonym = ''
+dataSourceTitleShort = ''
 
 #Populate new field 'minimumElevationInMeters'
 def verifyScientificNames(row):
@@ -305,8 +306,8 @@ def verifyScientificNames(row):
             nameStrings = row['scientificName']
             #run function that calls API
             gnv_function(nameStrings)
-            #set row value to result rfom API call
-    # row['GNVmatchType'] = gnvResult.matchType
+            #set row value to result from API call
+    row['GNVmatchType'] = matchType
     # row['GNVmatchedCanonicalFull'] = gnvResult.matchedCanonicalFull
     # row['GNVisSynonym'] = gnvResult.isSynonym
     # row['GNVdataSourceTitleShort'] = gnvResult.dataSourceTitleShort
@@ -327,6 +328,11 @@ def gnv_function(nameStrings):
     gnvResponse = requests.post(verifier_api_url, json=params)
     # print(gnvResponse.json())
     gnvResponseJSON = json.loads(gnvResponse.text)
+    global matchType
+    global matchedCanonicalFull
+    global isSynonym
+    global dataSourceTitleShort
+    matchType = gnvResponseJSON["names"][0]["matchType"]
     print(gnvResponseJSON["names"][0]["matchType"])
 
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------
