@@ -297,39 +297,31 @@ verifier_api_url = "https://verifier.globalnames.org/api/v1/verifications"
 nameStrings = ''
 # create an Empty DataFrame object
 df = pd.DataFrame()
-#create empty variable for results
-gnvResult = {}
 
 #Populate new field 'minimumElevationInMeters'
 def verifyScientificNames(row):
      #if there is a scientificName, set as variable and then add to the dataframe
     if row['scientificName']:
             nameStrings = row['scientificName']
-            df = pd.DataFrame({
-            'nameStrings': nameStrings
-            }, index=[0])
             #run function that calls API
-            gnv_function(df, 'nameStrings')
+            gnv_function(nameStrings)
             #set row value to result rfom API call
     # row['GNVmatchType'] = gnvResult.matchType
     # row['GNVmatchedCanonicalFull'] = gnvResult.matchedCanonicalFull
     # row['GNVisSynonym'] = gnvResult.isSynonym
     # row['GNVdataSourceTitleShort'] = gnvResult.dataSourceTitleShort
 
-def gnv_function(df, nameStrings_column):
-    for nameStrings in zip(df[nameStrings_column]):
+def gnv_function(nameStrings):
     # define rest query params
-     params = {
-        'nameStrings': nameStrings,
-        'dataSources': 5,
-        'withAllMatches': True,
-        'withCapitalization': True,
-        'withSpeciesGroup': True,
-        'withUninomialFuzzyMatch': False,
-        'withStats': True,
-        'mainTaxonThreshold': 0.6
+    params = {
+        "nameStrings": [nameStrings],
+        "dataSources": [5]
     }
     print(params)
+    gnvResponse = requests.post(verifier_api_url, json=params)
+    # print(gnvResponse.json())
+    gnvResponseJSON = json.loads(gnvResponse.text)
+    print(gnvResponseJSON["metadata"])
 
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
