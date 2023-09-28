@@ -45,7 +45,7 @@ if mode == 1:
 # Name input and output files here for mode = 2
 #-------------------------------------------------    
 if mode == 2:
-    input_file = 'C:/dbg_voucherDataProcessingScript/TEMPLATE_DataFields_Vouchers_Fungi_gnrTest.xlsx'
+    input_file = 'C:/dbg_voucherDataProcessingScript/20230724_konza+guanella.csv'
     output_file = 'C:/dbg_voucherDataProcessingScript/testOutput.csv'
 
 def main():
@@ -308,15 +308,15 @@ def verifyScientificNames(row):
             gnv_function(nameStrings)
             #set row value to result from API call
     row['GNVmatchType'] = matchType
-    # row['GNVmatchedCanonicalFull'] = gnvResult.matchedCanonicalFull
-    # row['GNVisSynonym'] = gnvResult.isSynonym
-    # row['GNVdataSourceTitleShort'] = gnvResult.dataSourceTitleShort
+    row['GNVmatchedCanonicalFull'] = matchedCanonicalFull
+    row['GNVisSynonym'] = isSynonym
+    row['GNVdataSourceTitleShort'] = dataSourceTitleShort
 
 def gnv_function(nameStrings):
-    # define rest query params
+    # define query params
     params = {
         "nameStrings": [nameStrings],
-        "dataSources": [5],
+        "dataSources": [5, 203, 100],
         "withAllMatches": True,
         "withCapitalization": True,
         "withSpeciesGroup": True,
@@ -324,16 +324,28 @@ def gnv_function(nameStrings):
         "withStats": True,
         "mainTaxonThreshold": 0.6
     }
-    print(params)
+    #make the post request
     gnvResponse = requests.post(verifier_api_url, json=params)
-    # print(gnvResponse.json())
+    #convert the response to JSON
     gnvResponseJSON = json.loads(gnvResponse.text)
+    #make variables global so they can be accessed inside this function
     global matchType
     global matchedCanonicalFull
     global isSynonym
     global dataSourceTitleShort
+    #empty the variables, so the previous value is not carried over in case of a no match
+    matchType = ''
+    matchedCanonicalFull = ''
+    isSynonym = ''
+    dataSourceTitleShort = ''
+    #set the global variables to the values from the response
     matchType = gnvResponseJSON["names"][0]["matchType"]
-    print(gnvResponseJSON["names"][0]["matchType"])
+    #if there is no match, the json returned doesnt include a results item, so check first to avoid error
+    if matchType != "NoMatch":
+        #set the global variables to the values from the response
+        matchedCanonicalFull = gnvResponseJSON["names"][0]["results"][0]["matchedCanonicalFull"]
+        isSynonym = gnvResponseJSON["names"][0]["results"][0]["isSynonym"]
+        dataSourceTitleShort = gnvResponseJSON["names"][0]["results"][0]["dataSourceTitleShort"]
 
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
