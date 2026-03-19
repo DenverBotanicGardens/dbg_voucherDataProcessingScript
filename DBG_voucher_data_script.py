@@ -47,6 +47,13 @@ if mode == 1:
 if mode == 2:
     input_file = 'C:/dbg_voucherDataProcessingScript/202512_California_ThanksgivingChristmas_Andy.csv'
     output_file = 'C:/dbg_voucherDataProcessingScript/202512_California_ThanksgivingChristmas_Andy_script.csv'
+    output_file_2 = 'C:/dbg_voucherDataProcessingScript/202512_California_ThanksgivingChristmas_Andy_extended.csv'
+
+#-------------------------------------------------
+# BASE URLS for EXTENDED DATA ASSOCIATIONS
+#-------------------------------------------------   
+INATURALIST_BASE_URL = 'https://www.inaturalist.org/observations/'
+MUSHROOM_OBSERVER_BASE_URL = 'https://mushroomobserver.org/'
 
 def main():
     
@@ -65,6 +72,19 @@ def main():
         outfile = output_file
     if ext_out == "xlsx":
         outfile = 'temp_out.csv'  
+
+
+    # If the 2nd OUTPUT file is an .xlsx spreadsheet, create a temporary .csv outfile and convert to .xlsx at end of script.    
+    ext_out_2 = output_file_2.split('.')[-1].lower()
+    if ext_out_2 == "csv":
+        outfile_2 = output_file_2
+    elif ext_out_2 == "xlsx":
+        outfile_2 = 'temp_out_2.csv'
+    else:
+        raise ValueError("Second output file must be .csv or .xlsx")
+    
+    # Store rows for second file/ extended data associations
+    second_csv_rows = []
         
     # Read the csv file
     with open(input_csv, 'r') as infile:
@@ -92,13 +112,27 @@ def main():
                 dynamicProperties(row)
                 associatedTaxa(row)
                 otherCatalogNumbers(row)
-            
+                
+                # Build second CSV rows from this original row
+                second_csv_rows.extend(build_related_resource_rows(row))
+                
                 writer.writerow(row)
+
+        # Write the extended import/associations csv
+        second_fieldnames = ['subjectCatalogNumber', 'basisOfRecord', 'resourceURL']
+        with open(outfile_2, 'w', newline='', encoding='utf-8') as second_outfile:
+            writer2 = csv.DictWriter(second_outfile, fieldnames=second_fieldnames)
+            writer2.writeheader()
+            writer2.writerows(second_csv_rows)
                 
         # Export the outfile as an Excel file if user indicated .xlsx
         if ext_out == "xlsx":
             df = pd.read_csv('temp_out.csv')
             df.to_excel(output_file, index=False)
+
+        if ext_out_2 == "xlsx":
+            df2 = pd.read_csv('temp_out_2.csv')
+            df2.to_excel(output_file_2, index=False)
 
         # Clean up
         infile.close()
@@ -108,7 +142,38 @@ def main():
         if os.path.exists('temp_in.csv'):
             os.remove('temp_in.csv')
         if os.path.exists('temp_out.csv'):
-            os.remove('temp_out.csv')            
+            os.remove('temp_out.csv')
+        if os.path.exists('temp_out_2.csv'):
+            os.remove('temp_out_2.csv')                 
+
+
+#define building rows for related resouce/associations/extedned data
+def build_related_resource_rows(row):
+    results =[]
+
+    catalog_number = (row.get('catalogNumber') or '').strip()
+    inat_id = (row.get('iNaturalist ID') or '').strip()
+    mo_id = (row.get('Mushroom Observer ID') or '').strip()
+
+    if not catalog_number:
+        return results
+
+    if inat_id:
+        results.append({
+            'subjectCatalogNumber': catalog_number,
+            'basisOfRecord': 'HumanObservation',
+            'resourceURL': INATURALIST_BASE_URL + inat_id
+        })
+
+    if mo_id:
+        results.append({
+            'subjectCatalogNumber': catalog_number,
+            'basisOfRecord': 'HumanObservation',
+            'resourceURL': MUSHROOM_OBSERVER_BASE_URL + mo_id
+        })
+
+    return results
+
 #-------------------------------------------------------------
 # Each new data field is defined in the functions below
 #-------------------------------------------------------------
@@ -150,6 +215,8 @@ def occurrenceRemarks(row):
                 occurrenceRemarks += row['collector notes'].capitalize() + '. '
             if row['iNaturalist ID']:
                 occurrenceRemarks += "iNaturalist Record: " + row['iNaturalist ID']+"."
+            if row['Mushroom Observer ID']:
+                occurrenceRemarks += "Mushroom Observer Record: " + row['Mushroom Observer ID']+"."                
             row['occurrenceRemarks'] = occurrenceRemarks              
             
 # Populate new field 'description'
