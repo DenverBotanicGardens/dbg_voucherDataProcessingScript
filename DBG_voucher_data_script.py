@@ -45,8 +45,8 @@ if mode == 1:
 # Name input and output files here for mode = 2
 #-------------------------------------------------    
 if mode == 2:
-    input_file = 'C:/dbg_voucherDataProcessingScript/20230724_konza+guanella.csv'
-    output_file = 'C:/dbg_voucherDataProcessingScript/testOutput.csv'
+    input_file = 'C:/dbg_voucherDataProcessingScript/202512_California_ThanksgivingChristmas_Andy.csv'
+    output_file = 'C:/dbg_voucherDataProcessingScript/202512_California_ThanksgivingChristmas_Andy_script.csv'
 
 def main():
     
@@ -147,9 +147,9 @@ def occurrenceRemarks(row):
             if row['Project Title']:
                 occurrenceRemarks += row['Project Title'].title() + '. '
             if row['collector notes']:
-                occurrenceRemarks += row['collector notes'].title() + '. '
+                occurrenceRemarks += row['collector notes'].capitalize() + '. '
             if row['iNaturalist ID']:
-                occurrenceRemarks += "<a href='https://inaturalist.org/observations/" + row['iNaturalist ID'] + "' target='_blank' style='color: blue';>iNaturalist Record: " + row['iNaturalist ID']  + "</a>."
+                occurrenceRemarks += "iNaturalist Record: " + row['iNaturalist ID']+"."
             row['occurrenceRemarks'] = occurrenceRemarks              
             
 # Populate new field 'description'
@@ -276,6 +276,7 @@ def elevation_function(df, lat_column, lon_column):
     #elevations.append(result.json()['USGS_Elevation_Point_Query_Service']['Elevation_Query']['Elevation'])
     #new 2023:
     #print(json.dumps((result.json()['value'])))
+    print(result.status_code)
     global elevationResult
     elevationResult = json.dumps((result.json()['value'])).replace('"','')[:-8]
     # print("value from api" + json.dumps((result.json()['value'])))
